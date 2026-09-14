@@ -16,7 +16,10 @@ il repo `russo` (a `https://andrisis2.github.io/russo/articoli/`), che però è 
 progetto per imparare il russo e non c'entra niente: ora ha casa propria.
 
 I percorsi dell'app sono tutti relativi, quindi funziona da qualsiasi
-sottocartella: se il repo cambia nome, cambia solo l'indirizzo.
+sottocartella: se il repo cambia nome, cambia solo l'indirizzo. Attenzione
+però: il trattino finale in `articoli-` è voluto, non è un refuso. Rinominare
+il repo cambierebbe l'indirizzo dell'app, che andrebbe reinstallata sul
+telefono: non «correggerlo».
 
 ## File
 
