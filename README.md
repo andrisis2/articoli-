@@ -4,7 +4,7 @@ PWA per scrivere articoli: sfoglia a tendine le cartelle del repo **privato**
 `andrisis2/prep`, apre i file, li mostra in markdown e li lascia modificare.
 Ogni salvataggio è un commit vero su GitHub, così Claude ritrova le modifiche.
 
-- Live: https://andrisis2.github.io/articoli/
+- Live: https://andrisis2.github.io/articoli-/
 - Contenuti: repo `andrisis2/prep` (privato) — **qui non c'è nessun testo degli articoli**
 
 ## Perché è un repo a sé
