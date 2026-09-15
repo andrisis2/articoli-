@@ -300,6 +300,11 @@ header h1 .dot{color:var(--accent)}
 }
 .sheetbox input:focus{border-color:var(--accent);outline:none}
 .sheetbox .help{font-size:13px;color:var(--muted);line-height:1.6}
+.sheetbox .tokact{display:flex;gap:18px;margin-top:8px}
+.sheetbox .tokact button{
+  font-size:13px; font-weight:600; color:var(--muted);
+  text-decoration:underline; text-underline-offset:2px; padding:3px 0;
+}
 .sheetbox a{color:inherit;text-decoration-color:var(--accent);text-underline-offset:2px}
 .sheetbox ol{padding-left:20px;font-size:13px;color:var(--muted);line-height:1.7}
 .btnrow{display:flex;gap:10px;margin-top:20px}
@@ -437,6 +442,19 @@ function toast(msg, ms){
   document.body.appendChild(t);
   if(ms !== 0) setTimeout(function(){ if(t.parentNode) t.remove(); }, ms || 2600);
   return t;
+}
+
+/* La clipboard non c'è dappertutto (e su iOS la concede solo da un tocco):
+   se manca o rifiuta, si ripiega sulla selezione del campo, che si copia a mano. */
+function copyText(txt, input){
+  function fallback(){
+    try{ input.type = 'text'; input.focus(); input.setSelectionRange(0, txt.length); return document.execCommand('copy'); }
+    catch(e){ return false; }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(txt).then(function(){ return true; }, fallback);
+  }
+  return Promise.resolve(fallback());
 }
 
 function slugify(s){
@@ -1029,6 +1047,7 @@ function apriImpostazioni(){
     '<label>Ramo</label><input id="_br" autocapitalize="off" autocorrect="off">' +
     '<label>Cartella radice</label><input id="_root" autocapitalize="off" autocorrect="off">' +
     '<label>Token personale GitHub</label><input id="_tok" type="password" autocapitalize="off" autocorrect="off" placeholder="github_pat_...">' +
+    '<div class="tokact"><button id="_vedi">Mostra</button><button id="_copia">Copia</button></div>' +
     '<p class="help" style="margin-top:14px"><b>Come si crea il token</b> (serve una volta sola):</p>' +
     '<ol>' +
       '<li>Apri <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>' +
@@ -1046,6 +1065,22 @@ function apriImpostazioni(){
   s.el.querySelector('#_br').value = cfg.branch;
   s.el.querySelector('#_root').value = cfg.root;
   s.el.querySelector('#_tok').value = cfg.token;
+
+  // il token sta a pallini per non lasciarlo in chiaro sullo schermo, ma per
+  // installare l'app su un secondo dispositivo bisogna poterlo rileggere
+  var tok = s.el.querySelector('#_tok');
+  s.el.querySelector('#_vedi').onclick = function(){
+    var inChiaro = tok.type === 'text';
+    tok.type = inChiaro ? 'password' : 'text';
+    this.textContent = inChiaro ? 'Mostra' : 'Nascondi';
+  };
+  s.el.querySelector('#_copia').onclick = function(){
+    var v = tok.value.trim();
+    if(!v){ toast('Nessun token da copiare'); return; }
+    copyText(v, tok).then(function(ok){
+      toast(ok ? 'Token copiato' : 'Copia non riuscita: premi Mostra e copialo a mano');
+    });
+  };
 
   s.el.querySelector('#_annulla').onclick = s.close;
   s.el.querySelector('#_salva').onclick = function(){
