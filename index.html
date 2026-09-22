@@ -220,6 +220,14 @@ header h1 .dot{color:var(--accent)}
 }
 #preview>:first-child{margin-top:0}
 #preview img{max-width:100%;border-radius:var(--r-s);display:block}
+
+/* una pagina HTML (il grafico, la mappa) si guarda come pagina: niente colonna
+   di lettura, prende tutta l'area del visualizzatore */
+#preview.pagina{max-width:none;padding:0;height:100%}
+#preview.pagina iframe{
+  display:block; width:100%; height:100%; min-height:420px;
+  border:0; background:var(--panel);
+}
 #preview h1,#preview h2,#preview h3,#preview h4{
   font-family:var(--sans); line-height:1.25; margin:1.5em 0 .45em;
   letter-spacing:-.01em; text-wrap:balance;
@@ -431,10 +439,11 @@ function b64bytes(b64){
 function b64decodeText(b64){ return new TextDecoder('utf-8').decode(b64bytes(b64)); }
 
 function ext(p){ var m = /\.([a-z0-9]+)$/i.exec(p); return m ? m[1].toLowerCase() : ''; }
-var TEXT_EXT = ['md','markdown','txt','json','csv','tsv','yml','yaml','html','css','js','py','sh','tex','bib','srt','vtt','xml','ini','toml','log'];
+var TEXT_EXT = ['md','markdown','txt','json','csv','tsv','yml','yaml','html','htm','css','js','py','sh','tex','bib','srt','vtt','xml','ini','toml','log'];
 var IMG_EXT  = ['png','jpg','jpeg','gif','webp','svg','avif'];
 function isText(p){ return TEXT_EXT.indexOf(ext(p)) >= 0 || p.indexOf('.') < 0; }
 function isImg(p){ return IMG_EXT.indexOf(ext(p)) >= 0; }
+function isPagina(p){ var e = ext(p); return e === 'html' || e === 'htm'; }
 
 function toast(msg, ms){
   var old = $('toast'); if(old) old.remove();
@@ -684,6 +693,16 @@ function mdInline(s){
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<em>$2</em>');
   s = s.replace(/(^|\s)_([^_\n]+)_(?=\s|$|[.,;:!?])/g, '$1<em>$2</em>');
+
+  // Gli indirizzi scritti nudi diventano link. Nelle note e nei materiali i link
+  // si scrivono così, non in forma [testo](indirizzo): senza questo, dal telefono
+  // non si aprono. Va per ultima, così non tocca gli href già prodotti sopra —
+  // lì l'indirizzo è preceduto da una virgoletta o da «>», non da uno spazio.
+  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<>"')\]]+)/g, function(m, pre, url){
+    var coda = '', t = url.match(/[.,;:!?]+$/);
+    if(t){ coda = t[0]; url = url.slice(0, -coda.length); }
+    return pre + '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>' + coda;
+  });
   return s;
 }
 
@@ -774,12 +793,34 @@ function setMode(mode){
   $('tabEdit').classList.toggle('on', !read);
   $('preview').classList.toggle('hide', !read);
   $('editor').classList.toggle('hide', read);
-  if(read && cur && cur.kind === 'text'){
-    $('preview').innerHTML = ext(cur.path) === 'md' || ext(cur.path) === 'markdown'
-      ? mdToHtml($('editor').value)
-      : '<pre>' + escapeHtml($('editor').value) + '</pre>';
-  }
+  if(read && cur && cur.kind === 'text') renderRead();
   if(!read) setTimeout(function(){ $('editor').focus(); }, 50);
+}
+
+// «Leggi» su una pagina HTML mostra la pagina, non il suo codice: è così che dal
+// telefono si guardano il grafico e la mappa. Il sorgente resta sotto «Modifica».
+//
+// L'iframe è in sandbox SENZA allow-same-origin: la pagina gira su un'origine
+// opaca e non può leggere il localStorage dell'app, dove sta il token di GitHub.
+// Le due cose non vanno mai rimesse insieme (allow-scripts + allow-same-origin
+// permetterebbe alla pagina di togliersi la sandbox da sola).
+function renderRead(){
+  var p = $('preview'), e = ext(cur.path), testo = $('editor').value;
+  p.classList.toggle('pagina', isPagina(cur.path));
+
+  if(isPagina(cur.path)){
+    p.innerHTML = '';
+    var f = document.createElement('iframe');
+    f.setAttribute('sandbox', 'allow-scripts');
+    f.setAttribute('referrerpolicy', 'no-referrer');
+    f.title = shortPath(cur.path);
+    f.srcdoc = testo;          // proprietà, non attributo: niente escape a mano
+    p.appendChild(f);
+    return;
+  }
+  p.innerHTML = (e === 'md' || e === 'markdown')
+    ? mdToHtml(testo)
+    : '<pre>' + escapeHtml(testo) + '</pre>';
 }
 
 function updateDirty(){
