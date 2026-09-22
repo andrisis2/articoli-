@@ -1,7 +1,7 @@
 // Service worker minimale: tiene offline solo il guscio dell'app.
 // I contenuti arrivano dall'API di GitHub e NON vanno messi in cache qui:
 // se ne occupa l'app salvando l'ultima copia letta in localStorage.
-const CACHE = 'articoli-v1';
+const CACHE = 'articoli-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.png', './icon-192.png'];
 
 self.addEventListener('install', e => {
