@@ -50,6 +50,14 @@ rimesse insieme.** Così la pagina gira su un'origine opaca e non può leggere i
 `allow-scripts allow-same-origin` insieme la pagina potrebbe togliersi la
 sandbox da sola e arrivare al token.
 
+La sandbox ha anche `allow-popups` e `allow-popups-to-escape-sandbox`: servono
+perché i link di una pagina (la bozza dell'articolo rimanda alla mappa e al
+modello completo) si aprano in una scheda nuova. La scheda nuova è un sito a
+sé, e la pagina dentro l'app resta sull'origine opaca: il token non si vede.
+
+In `prep` le bozze interattive dell'articolo (`bozze/bozza-NN.html`) si aprono
+allo stesso modo: si tocca il file e si legge.
+
 Per lo stesso motivo non c'è un tasto «apri a schermo intero»: servirebbe un
 indirizzo `blob:`, che erediterebbe l'origine dell'app e quindi vedrebbe il
 token. Per aprire una pagina fuori dall'app si usa il suo link pubblico.
