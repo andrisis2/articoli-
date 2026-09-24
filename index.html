@@ -804,6 +804,9 @@ function setMode(mode){
 // opaca e non può leggere il localStorage dell'app, dove sta il token di GitHub.
 // Le due cose non vanno mai rimesse insieme (allow-scripts + allow-same-origin
 // permetterebbe alla pagina di togliersi la sandbox da sola).
+// allow-popups serve ai link della pagina (la bozza rimanda alla mappa e al
+// modello completo): si aprono in una scheda nuova, fuori dalla sandbox, senza
+// dare alla pagina nessun accesso all'app.
 function renderRead(){
   var p = $('preview'), e = ext(cur.path), testo = $('editor').value;
   p.classList.toggle('pagina', isPagina(cur.path));
@@ -811,7 +814,7 @@ function renderRead(){
   if(isPagina(cur.path)){
     p.innerHTML = '';
     var f = document.createElement('iframe');
-    f.setAttribute('sandbox', 'allow-scripts');
+    f.setAttribute('sandbox', 'allow-scripts allow-popups allow-popups-to-escape-sandbox');
     f.setAttribute('referrerpolicy', 'no-referrer');
     f.title = shortPath(cur.path);
     f.srcdoc = testo;          // proprietà, non attributo: niente escape a mano
